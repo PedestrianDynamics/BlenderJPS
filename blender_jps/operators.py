@@ -144,6 +144,8 @@ class JUPEDSIM_OT_load_simulation(Operator):
     _total_agents = 0
     _stage = None
     _big_data_mode = False
+    _load_full_paths = False
+    _path_groups = None
     
     def execute(self, context):
         """Start a modal load that keeps the UI responsive."""
@@ -175,6 +177,7 @@ class JUPEDSIM_OT_load_simulation(Operator):
         self._reset_state()
         self._frame_step = props.frame_step
         self._big_data_mode = props.big_data_mode
+        self._load_full_paths = props.load_full_paths
         self._cancel_event = threading.Event()
         props.loading_in_progress = True
         props.loading_progress = 0.0
@@ -246,7 +249,7 @@ class JUPEDSIM_OT_load_simulation(Operator):
             props.loading_message = "Creating agents..."
             if self._step_create_agents(context):
                 self._timed_end("create_agents")
-                self._stage = "finalize"
+                self._stage = "create_paths" if self._load_full_paths else "finalize"
 
         if self._stage == "create_big_data":
             props.loading_message = "Building frame buffers..."
@@ -307,6 +310,8 @@ class JUPEDSIM_OT_load_simulation(Operator):
         self._total_agents = 0
         self._stage = None
         self._big_data_mode = False
+        self._load_full_paths = False
+        self._path_groups = None
         self._clear_stream_state()
 
     def _finish_success(self, context):
@@ -383,6 +388,16 @@ class JUPEDSIM_OT_load_simulation(Operator):
             res = cur.execute("SELECT DISTINCT id FROM trajectory_data ORDER BY id ASC")
             agent_ids = [row[0] for row in res.fetchall()]
             timings["read_agent_ids"] = time.perf_counter() - start
+            if cancel_event.is_set():
+                self._worker_timings = timings
+                self._worker_done = True
+                return
+
+            path_groups = None
+            if self._load_full_paths:
+                start = time.perf_counter()
+                path_groups = self._load_full_path_groups(cur, frame_step)
+                timings["load_full_paths"] = time.perf_counter() - start
 
             start = time.perf_counter()
             res = cur.execute("SELECT value FROM metadata WHERE key == 'fps'")
@@ -401,6 +416,7 @@ class JUPEDSIM_OT_load_simulation(Operator):
                 "fps": fps,
                 "num_frames": num_frames,
                 "db_path": str(path),
+                "path_groups": path_groups,
             }
             self._worker_timings = timings
             self._worker_done = True
@@ -420,6 +436,7 @@ class JUPEDSIM_OT_load_simulation(Operator):
         self._min_frame = self._worker_data["min_frame"]
         self._max_frame = self._worker_data["max_frame"]
         self._sampled_frames = set()
+        self._path_groups = self._worker_data.get("path_groups")
         context.scene.jupedsim_props.loaded_agent_count = self._total_agents
         context.scene.frame_start = self._min_frame
         context.scene.frame_end = self._max_frame
@@ -449,20 +466,20 @@ class JUPEDSIM_OT_load_simulation(Operator):
 
     def _step_create_paths(self, context):
         """Create a small batch of agent path curves per tick."""
-        if self._agent_groups is None:
+        if not self._path_groups:
             return True
         if self._path_index == 0:
             self._timed_start("create_paths")
         chunk_size = 10
         start = self._path_index
-        end = min(self._total_agents, start + chunk_size)
+        end = min(len(self._path_groups), start + chunk_size)
         for idx in range(start, end):
-            agent_id, agent_data = self._agent_groups[idx]
-            self._create_agent_path(context, agent_id, agent_data, self._agents_collection)
+            agent_id, coords = self._path_groups[idx]
+            self._create_agent_path(context, agent_id, coords, self._agents_collection)
         self._path_index = end
-        progress = 70.0 + (self._path_index / max(1, self._total_agents)) * 25.0
+        progress = 70.0 + (self._path_index / max(1, len(self._path_groups))) * 25.0
         context.scene.jupedsim_props.loading_progress = min(progress, 95.0)
-        if self._path_index >= self._total_agents:
+        if self._path_index >= len(self._path_groups):
             return True
         return False
 
@@ -504,6 +521,19 @@ class JUPEDSIM_OT_load_simulation(Operator):
         if not STREAM_STATE["handler_installed"]:
             bpy.app.handlers.frame_change_pre.append(_stream_frame_handler)
             STREAM_STATE["handler_installed"] = True
+
+    def _load_full_path_groups(self, cursor, frame_step):
+        """Load full path coordinates per agent using SQLite cursor."""
+        res = cursor.execute(
+            "SELECT id, frame, pos_x, pos_y FROM trajectory_data "
+            "ORDER BY id ASC, frame ASC"
+        )
+        paths = {}
+        for agent_id, frame, x, y in res.fetchall():
+            if frame_step > 1 and frame % frame_step != 0:
+                continue
+            paths.setdefault(agent_id, []).append((float(x), float(y), 0.0))
+        return [(agent_id, coords) for agent_id, coords in paths.items()]
 
     def _clear_stream_state(self):
         """Remove frame handlers and clear streaming buffers."""
@@ -607,17 +637,8 @@ class JUPEDSIM_OT_load_simulation(Operator):
         
         return curve_obj
     
-    def _create_agent_path(self, context, agent_id, agent_data, collection):
+    def _create_agent_path(self, context, agent_id, coords, collection):
         """Create a curve representing the path of an agent."""
-        # Get all coordinates for this agent's path
-        coords = []
-        x_col = 'x' if 'x' in agent_data.columns else 'pos_x'
-        y_col = 'y' if 'y' in agent_data.columns else 'pos_y'
-        for _, row in agent_data.iterrows():
-            x = float(row[x_col])
-            y = float(row[y_col])
-            z = 0.0  # below the agent, at the height of the ground
-            coords.append((x, y, z))
         
         if len(coords) < 2:
             return  # Need at least 2 points for a curve

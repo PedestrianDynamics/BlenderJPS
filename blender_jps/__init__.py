@@ -68,6 +68,12 @@ class JuPedSimProperties(PropertyGroup):
         default=False,
     )
 
+    load_full_paths: BoolProperty(
+        name="Load Full Paths",
+        description="Load full agent paths as curves (can be very slow for large files)",
+        default=False,
+    )
+
     show_paths: BoolProperty(
         name="Show Agent Paths",
         description="Show/hide path curves for all agents",

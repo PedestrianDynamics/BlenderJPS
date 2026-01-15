@@ -57,7 +57,11 @@ class JUPEDSIM_PT_main_panel(Panel):
         row = box.row()
         row.prop(props, "frame_step", text="Load Every Nth Frame")
         row = box.row()
-        row.prop(props, "big_data_mode", text="Big Data Mode")
+        row.prop(props, "big_data_mode", text="Big Data Mode (load agent data as particles)")
+        row = box.row()
+        row.prop(props, "load_full_paths", text="Load Full Paths (slow)")
+        if props.load_full_paths:
+            box.label(text="Warning: may take a long time on large files", icon='ERROR')
         
         layout.separator()
         
@@ -76,7 +80,7 @@ class JUPEDSIM_PT_main_panel(Panel):
         
         layout.separator()
         
-        # Display options (only show if agents are loaded)
+        # Display options (only show if paths were loaded)
         if "JuPedSim_Agents" in bpy.data.collections:
             agents_collection = bpy.data.collections["JuPedSim_Agents"]
             # Check for path objects in the collection
@@ -84,15 +88,13 @@ class JUPEDSIM_PT_main_panel(Panel):
             # Also check for agent objects to determine if simulation was loaded
             agent_objects = [obj for obj in agents_collection.objects if obj.name.startswith("Agent_")]
             
-            # Show checkbox if we have agents (paths should exist if agents exist)
-            if agent_objects:
+            # Show checkbox only when paths exist and load_full_paths was enabled
+            if props.load_full_paths and agent_objects and path_objects:
                 box = layout.box()
                 box.label(text="Display Options", icon='HIDE_OFF')
                 row = box.row()
                 row.prop(props, "show_paths", text="Show Agent Paths")
-                if path_objects:
-                    # Show count of paths
-                    box.label(text=f"({len(path_objects)} path curves)", icon='CURVE_DATA')
+                box.label(text=f"({len(path_objects)} path curves)", icon='CURVE_DATA')
         
         # Info section
         layout.separator()
