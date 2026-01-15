@@ -16,7 +16,13 @@ bl_info = {
 }
 
 import bpy
-from bpy.props import StringProperty, PointerProperty, IntProperty, BoolProperty
+from bpy.props import (
+    StringProperty,
+    PointerProperty,
+    IntProperty,
+    BoolProperty,
+    FloatProperty,
+)
 from bpy.types import PropertyGroup
 
 # Import submodules
@@ -56,11 +62,49 @@ class JuPedSimProperties(PropertyGroup):
         soft_max=1000,
     )
     
+    big_data_mode: BoolProperty(
+        name="Big Data Mode",
+        description="Load trajectories into a single point cloud for fast playback (high RAM usage)",
+        default=False,
+    )
+
     show_paths: BoolProperty(
         name="Show Agent Paths",
         description="Show/hide path curves for all agents",
         default=False,
         update=update_path_visibility,
+    )
+
+    loading_in_progress: BoolProperty(
+        name="Loading In Progress",
+        description="Indicates whether a load operation is currently running",
+        default=False,
+        options={'HIDDEN'},
+    )
+
+    loading_progress: FloatProperty(
+        name="Loading Progress",
+        description="Progress of the current loading operation",
+        default=0.0,
+        min=0.0,
+        max=100.0,
+        subtype='PERCENTAGE',
+        options={'HIDDEN'},
+    )
+
+    loading_message: StringProperty(
+        name="Loading Message",
+        description="Status message for the current loading operation",
+        default="",
+        options={'HIDDEN'},
+    )
+
+    loaded_agent_count: IntProperty(
+        name="Loaded Agent Count",
+        description="Number of agents detected in the loaded simulation",
+        default=0,
+        min=0,
+        options={'HIDDEN'},
     )
 
 
