@@ -35,12 +35,22 @@ def update_path_visibility(self, context):
     """Update visibility of all agent path curves when property changes."""
     if "JuPedSim_Agents" not in bpy.data.collections:
         return
-    
+
     collection = bpy.data.collections["JuPedSim_Agents"]
     for obj in collection.objects:
         if obj.name.startswith("Path_Agent_"):
             obj.hide_viewport = not self.show_paths
             obj.hide_render = not self.show_paths
+
+
+def update_agent_scale(self, context):
+    """Update scale of all agent meshes when property changes."""
+    if "JuPedSim_Agents" not in bpy.data.collections:
+        return
+    collection = bpy.data.collections["JuPedSim_Agents"]
+    for obj in collection.objects:
+        if obj.name.startswith("Agent_") and obj.type == 'MESH':
+            obj.scale = (self.agent_scale, self.agent_scale, self.agent_scale)
 
 
 class JuPedSimProperties(PropertyGroup):
@@ -76,9 +86,20 @@ class JuPedSimProperties(PropertyGroup):
 
     show_paths: BoolProperty(
         name="Show Agent Paths",
-        description="Show/hide path curves for all agents",
+        description=(
+            "Show/hide path curves (reload with 'Load Full Paths' enabled to use)"
+        ),
         default=False,
         update=update_path_visibility,
+    )
+
+    agent_scale: FloatProperty(
+        name="Agent Scale (m)",
+        description="Display scale for agents in meters",
+        default=1.0,
+        min=0.01,
+        max=10.0,
+        update=update_agent_scale,
     )
 
     loading_in_progress: BoolProperty(
