@@ -56,6 +56,8 @@ class JUPEDSIM_PT_main_panel(Panel):
         box.label(text="Import Options", icon='SETTINGS')
         row = box.row()
         row.prop(props, "frame_step", text="Load Every Nth Frame")
+        row = box.row()
+        row.prop(props, "big_data_mode", text="Big Data Mode")
         
         layout.separator()
         
@@ -65,6 +67,12 @@ class JUPEDSIM_PT_main_panel(Panel):
         row.operator("jupedsim.load_simulation", 
                     text="Load Simulation", 
                     icon='IMPORT')
+
+        if props.loading_in_progress:
+            box = layout.box()
+            box.label(text=props.loading_message or "Loading...", icon='TIME')
+            box.prop(props, "loading_progress", text="Progress", slider=True)
+            box.label(text="Press Esc to cancel", icon='CANCEL')
         
         layout.separator()
         
@@ -111,7 +119,9 @@ class JUPEDSIM_PT_info_panel(Panel):
         agents_count = 0
         geometry_count = 0
         
-        if "JuPedSim_Agents" in bpy.data.collections:
+        if context.scene.jupedsim_props.loaded_agent_count:
+            agents_count = context.scene.jupedsim_props.loaded_agent_count
+        elif "JuPedSim_Agents" in bpy.data.collections:
             agents_count = len(bpy.data.collections["JuPedSim_Agents"].objects)
         
         if "JuPedSim_Geometry" in bpy.data.collections:
