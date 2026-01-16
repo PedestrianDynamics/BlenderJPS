@@ -55,6 +55,16 @@ def update_agent_scale(self, context):
             obj.scale = (self.agent_scale, self.agent_scale, self.agent_scale)
 
 
+def update_geometry_thickness(self, context):
+    """Update bevel thickness for all geometry curves when property changes."""
+    if "JuPedSim_Geometry" not in bpy.data.collections:
+        return
+    collection = bpy.data.collections["JuPedSim_Geometry"]
+    for obj in collection.objects:
+        if obj.type == 'CURVE':
+            obj.data.bevel_depth = self.geometry_thickness
+
+
 class JuPedSimProperties(PropertyGroup):
     """Property group for JuPedSim addon settings."""
     
@@ -102,6 +112,15 @@ class JuPedSimProperties(PropertyGroup):
         min=0.01,
         max=10.0,
         update=update_agent_scale,
+    )
+
+    geometry_thickness: FloatProperty(
+        name="Geometry Thickness (m)",
+        description="Curve thickness for geometry boundaries",
+        default=0.05,
+        min=0.0,
+        max=10.0,
+        update=update_geometry_thickness,
     )
 
     loading_in_progress: BoolProperty(

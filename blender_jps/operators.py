@@ -718,7 +718,7 @@ class JUPEDSIM_OT_load_simulation(Operator):
         collection.objects.link(curve_obj)
         
         # Add some visual thickness to the curve
-        curve_data.bevel_depth = 0.05
+        curve_data.bevel_depth = context.scene.jupedsim_props.geometry_thickness
         curve_data.bevel_resolution = 2
         
         return curve_obj

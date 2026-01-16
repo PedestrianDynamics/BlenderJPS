@@ -86,6 +86,11 @@ class JUPEDSIM_PT_main_panel(Panel):
         row = box.row()
         row.prop(props, "agent_scale", text="Agent Scale (m)")
         row = box.row()
+        row.prop(props, "geometry_thickness", text="Geometry Thickness (m)")
+        row = box.row()
+        fps_label = f"Frame Rate: {context.scene.render.fps} fps"
+        row.menu("RENDER_MT_framerate_presets", text=fps_label)
+        row = box.row()
         row.prop(props, "show_paths", text="Show Agent Paths")
         has_paths = False
         if "JuPedSim_Agents" in bpy.data.collections:
