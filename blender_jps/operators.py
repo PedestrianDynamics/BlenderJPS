@@ -279,6 +279,7 @@ class JUPEDSIM_OT_load_simulation(Operator):
                     if obj:
                         objects.append(obj)
                 self._start_streaming("default", objects=objects)
+            context.scene.frame_set(1)
             self._timed_end("finalize")
             props.loading_progress = 100.0
             props.loading_message = "Load complete"
