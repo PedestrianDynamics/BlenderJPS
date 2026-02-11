@@ -11,18 +11,14 @@ ensure_deps_in_path()
 bl_info = {
     "name": "BlenderJPS - JuPedSim Importer",
     "author": "Fabian Plum",
-    "version": (0, 1, 1),
+    "version": (0, 1, 3),
     "blender": (4, 0, 0),
     "location": "View3D > Sidebar > JuPedSim",
     "description": "Import JuPedSim trajectory SQLite files with agent animations and geometry",
-    "doc_url": "https://github.com/FabianPlum/BlenderJPS",
+    "warning": "Requires external Python packages (pedpy). See documentation for installation.",
+    "doc_url": "",
     "category": "Import-Export",
 }
-
-# Add warning only if dependencies are not installed
-if not is_pedpy_installed():
-    bl_info["warning"] = "Requires external Python packages (pedpy). See addon preferences."
-
 
 import bpy
 from bpy.props import (
@@ -84,8 +80,8 @@ class JuPedSimProperties(PropertyGroup):
 
     frame_step: IntProperty(
         name="Frame Step",
-        description="Load every Nth frame (1 = all frames, 2 = every 2nd frame, etc.)",
-        default=1,
+        description="Load every Nth frame (1 = all frames, 10 = every 10th frame, etc.). When >1, Blender frame F shows SQLite frame F×N.",
+        default=10,
         min=1,
         max=99999,
         soft_max=1000,
@@ -113,7 +109,7 @@ class JuPedSimProperties(PropertyGroup):
     agent_scale: FloatProperty(
         name="Agent Scale (m)",
         description="Display scale for agents in meters",
-        default=1.0,
+        default=0.2,
         min=0.01,
         max=10.0,
         update=update_agent_scale,
