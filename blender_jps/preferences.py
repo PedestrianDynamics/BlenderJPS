@@ -3,6 +3,10 @@ BlenderJPS Addon Preferences
 Handles addon preferences and dependency installation.
 """
 
+import os
+import subprocess
+import sys
+
 import bpy
 from bpy.types import AddonPreferences
 from bpy.props import BoolProperty
@@ -30,6 +34,16 @@ def is_pedpy_installed():
         return True
     except ImportError:
         return False
+
+
+def dependencies_installed():
+    """True if pedpy is importable or was just installed into the addon modules dir.
+    Used to grey out the install button and show restart prompt without requiring a restart.
+    """
+    if is_pedpy_installed():
+        return True
+    pedpy_dir = os.path.join(_MODULES_DIR, "pedpy")
+    return os.path.isdir(pedpy_dir)
 
 
 def get_python_executable():
