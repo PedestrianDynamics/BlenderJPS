@@ -81,31 +81,31 @@ jobs:
         run: |
           set -euxo pipefail
           "$BLENDER_BIN" \
-          --background \
-          --factory-startup \
-          --python blender_jps/tests/test_plugin_loading.py \
-          -- \
-          --addon "${ADDON_MODULE}" \
-          --factory-startup \
-          --require-module pedpy \
-          --require-module shapely \
-          --require-operator jupedsim.load_simulation \
-          --require-operator jupedsim.select_file \
-          --test-sqlite-loading   
+            --background \
+            --factory-startup \
+            --python blender_jps/tests/test_plugin_loading.py \
+            -- \
+            --addon "${ADDON_MODULE}" \
+            --factory-startup \
+            --require-module pedpy \
+            --require-module shapely \
+            --require-operator jupedsim.load_simulation \
+            --require-operator jupedsim.select_file \
+            --test-sqlite-loading   
 
-     - name: Run basic add-on test
-       shell: bash
-       run: |
-         set -euxo pipefail
-         "$BLENDER_BIN" \
-         --background \
-         --factory-startup \
-         --python blender_jps/tests/test_plugin_loading.py \
-         -- \
-         --addon "${ADDON_MODULE}" \
-         --factory-startup \
-         --require-module pedpy    
-            
+      - name: Run basic add-on test
+        shell: bash
+        run: |
+          set -euxo pipefail
+          "$BLENDER_BIN" \
+            --background \
+            --factory-startup \
+            --python blender_jps/tests/test_plugin_loading.py \
+            -- \
+            --addon "${ADDON_MODULE}" \
+            --factory-startup \
+            --require-module pedpy    
+          
       - name: Upload test artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
