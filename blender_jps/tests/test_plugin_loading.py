@@ -3,8 +3,8 @@ import os
 import sys
 import traceback
 
-import bpy
 import addon_utils
+import bpy
 
 
 def _script_args():
