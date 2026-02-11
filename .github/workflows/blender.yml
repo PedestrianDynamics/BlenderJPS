@@ -1,4 +1,4 @@
-name: Blender Add-on CI
+name: Blender Addon CI
 
 on:
   push:
