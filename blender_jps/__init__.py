@@ -2,11 +2,13 @@
 BlenderJPS - JuPedSim Trajectory Importer for Blender
 A Blender addon for importing JuPedSim simulation SQLite files.
 """
+import os
 
-from .preferences import ensure_deps_in_path
+from . import install_utils
 
-# Ensure deps are available before checking
-ensure_deps_in_path()
+ADDON_DIR = os.path.dirname(os.path.realpath(__file__))
+
+install_utils.ensure_deps_in_path(ADDON_DIR)
 
 bl_info = {
     "name": "BlenderJPS - JuPedSim Importer",

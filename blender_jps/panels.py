@@ -6,7 +6,7 @@ User interface panels for the JuPedSim importer.
 import bpy
 from bpy.types import Panel
 
-from .preferences import is_pedpy_installed
+from .install_utils import is_pedpy_installed
 
 
 class JUPEDSIM_PT_main_panel(Panel):
