@@ -47,34 +47,109 @@ jobs:
           
           "$GITHUB_WORKSPACE/${BLENDER_DIR}/blender" --version
       
-      - name: Install pedpy into Blender Python
+      - name: Install dependencies using addon's installation routine
         shell: bash
         run: |
           set -euxo pipefail
-          cat > /tmp/install_pedpy.py <<'PY'
+          
+          # Create installation script that mirrors preferences.py logic
+          cat > /tmp/install_deps_like_addon.py <<'PY'
+          import os
           import subprocess
           import sys
+          
+          # Mirror the exact logic from preferences.py
+          ADDON_DIR = os.path.join(os.environ['GITHUB_WORKSPACE'], 'blender_jps')
+          DEPS_DIR = os.path.join(ADDON_DIR, "deps")
           
           print("=" * 60)
           print(f"Blender Python: {sys.executable}")
           print(f"Python version: {sys.version}")
+          print(f"ADDON_DIR: {ADDON_DIR}")
+          print(f"DEPS_DIR: {DEPS_DIR}")
           print("=" * 60)
           
           try:
-              subprocess.check_call([sys.executable, "-m", "ensurepip", "--upgrade"])
-              subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-              subprocess.check_call([sys.executable, "-m", "pip", "install", "pedpy"])
-              print("\n✓ pedpy installed successfully")
+              # Create deps directory
+              os.makedirs(DEPS_DIR, exist_ok=True)
+              print(f"\n✓ Created deps directory: {DEPS_DIR}")
               
-              # Verify installation
-              import pedpy
-              print(f"✓ pedpy version: {pedpy.__version__}")
+              # Ensure pip is available
+              print("\nEnsuring pip is available...")
+              subprocess.check_call([sys.executable, "-m", "ensurepip", "--upgrade"])
+              print("✓ pip is available")
+              
+              print("\nUpgrading pip...")
+              subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+              print("✓ pip upgraded")
+              
+              print(f"\nInstalling pedpy and numpy<2.0 to {DEPS_DIR}...")
+              subprocess.check_call(
+                  [
+                      sys.executable,
+                      "-m",
+                      "pip",
+                      "install",
+                      "--target",
+                      DEPS_DIR,
+                      "--upgrade",
+                      "--no-user",
+                      "pedpy",
+                      "numpy<2.0",
+                  ],
+                  timeout=300,
+              )
+              print("✓ Dependencies installed")
+              
+              if DEPS_DIR not in sys.path:
+                  sys.path.insert(0, DEPS_DIR)
+              print(f"✓ Added {DEPS_DIR} to sys.path")
+              # mirror is_pedpy_installed()              
+              import importlib.util
+              if importlib.util.find_spec("pedpy") is not None:
+                  import pedpy
+                  print(f"\n✓ pedpy installed successfully")
+                  print(f"✓ pedpy version: {pedpy.__version__}")
+              else:
+                  print("\n✗ pedpy import failed after installation")
+                  sys.exit(1)
+                  
+          except subprocess.CalledProcessError as e:
+              print(f"\n✗ Failed to install dependencies: {e}")
+              sys.exit(1)
           except Exception as e:
-              print(f"\n✗ Failed to install pedpy: {e}")
+              print(f"\n✗ Unexpected error: {e}")
+              import traceback
+              traceback.print_exc()
               sys.exit(1)
           PY
           
-          "$BLENDER_BIN" --background --python /tmp/install_pedpy.py
+          "$BLENDER_BIN" --background --python /tmp/install_deps_like_addon.py
+      
+      - name: Verify installation matches addon expectations
+        shell: bash
+        run: |
+          set -euxo pipefail
+          
+          # Verify that the deps directory was created in the right place
+          DEPS_DIR="${GITHUB_WORKSPACE}/blender_jps/deps"
+          
+          if [ ! -d "$DEPS_DIR" ]; then
+            echo "✗ deps directory not found at: $DEPS_DIR"
+            exit 1
+          fi
+          
+          echo "✓ deps directory exists at: $DEPS_DIR"
+          
+          if [ ! -d "$DEPS_DIR/pedpy" ]; then
+            echo "✗ pedpy package not found in deps directory"
+            exit 1
+          fi
+          
+          echo "✓ pedpy package found in deps directory"
+          echo ""
+          echo "Contents of deps directory:"
+          ls -la "$DEPS_DIR"
       
       - name: Run add-on loading test with SQLite
         shell: bash
@@ -94,6 +169,8 @@ jobs:
             --test-dependency-installation \
             --test-sqlite-loading \
             --test-example-file
+      
+
 
           
             
