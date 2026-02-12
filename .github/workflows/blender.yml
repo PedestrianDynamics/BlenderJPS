@@ -91,7 +91,8 @@ jobs:
             --require-module shapely \
             --require-operator jupedsim.load_simulation \
             --require-operator jupedsim.select_file \
-            --test-sqlite-loading   
+            --test-sqlite-loading \
+            --test-example-file
 
       - name: Run basic add-on test
         shell: bash

@@ -177,7 +177,7 @@ def _validate_sqlite_schema(db_path, min_agents=1, min_frames=1):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT name FROM sqlite_master 
+        SELECT name FROM sqlite_master
         WHERE type='table' AND name='trajectory_data'
     """)
     if not cursor.fetchone():
@@ -209,7 +209,7 @@ def _validate_sqlite_schema(db_path, min_agents=1, min_frames=1):
     print(f"✓ Frame range: {min_frame} to {max_frame}")
 
     cursor.execute("""
-        SELECT name FROM sqlite_master 
+        SELECT name FROM sqlite_master
         WHERE type='table' AND name='geometry'
     """)
     has_geometry = cursor.fetchone() is not None
@@ -310,6 +310,9 @@ def main():
 
         if args.test_sqlite_loading:
             _test_sqlite_loading(args.addon)
+
+        if args.test_example_file:
+            _test_example_file(args.addon, repo_root)
 
         print("\n" + "=" * 72)
         print("All tests passed!")
