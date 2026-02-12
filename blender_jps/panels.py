@@ -3,10 +3,14 @@ BlenderJPS UI Panels
 User interface panels for the JuPedSim importer.
 """
 
+import os
+
 import bpy
 from bpy.types import Panel
 
 from .install_utils import is_pedpy_installed
+
+ADDON_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 class JUPEDSIM_PT_main_panel(Panel):
@@ -23,7 +27,7 @@ class JUPEDSIM_PT_main_panel(Panel):
         props = context.scene.jupedsim_props
 
         # Check dependencies
-        if not is_pedpy_installed():
+        if not is_pedpy_installed(ADDON_DIR):
             box = layout.box()
             box.alert = True
             box.label(text="Dependencies not installed!", icon="ERROR")
