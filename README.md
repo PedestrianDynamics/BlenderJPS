@@ -1,5 +1,5 @@
-[![Lint](https://github.com/chraibi/BlenderJPS/actions/workflows/lint.yml/badge.svg)](https://github.com/chraibi/BlenderJPS/actions/workflows/lint.yml)
-[![Blender Addon CI](https://github.com/chraibi/BlenderJPS/actions/workflows/blender.yml/badge.svg)](https://github.com/chraibi/BlenderJPS/actions/workflows/blender.yml)
+[![Lint](https://github.com/FabianPlum/BlenderJPS/actions/workflows/lint.yml/badge.svg)](https://github.com/FabianPlum/BlenderJPS/actions/workflows/lint.yml)
+[![Blender Addon CI](https://github.com/FabianPlum/BlenderJPS/actions/workflows/blender.yml/badge.svg)](https://github.com/FabianPlum/BlenderJPS/actions/workflows/blender.yml)
 
 # BlenderJPS - JuPedSim Trajectory Importer for Blender
 
